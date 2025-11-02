@@ -5,7 +5,7 @@ async function getMobs(){
         await new Promise(r => setTimeout(r, 100));
     }
     const mobs = florrioUtils.getMobs();
-    const base = 0x1240498 / 4;
+    const base = 0x03CB808 / 4;
     const rarityNames = ['Common', 'Unusual', 'Rare', 'Epic', 'Legendary', 'Mythic', 'Ultra', 'Super'];
     const rarityCount = rarityNames.length;
     const result = [];
