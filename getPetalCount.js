@@ -199,7 +199,7 @@ function main() {
             }
         };
 
-        const updateInterval = setInterval(() => {
+        const updateData = () => {
             const moduleHeap = window.Module?.HEAPU32 || (typeof Module !== 'undefined' && Module.HEAPU32);
             if (!moduleHeap) return;
 
@@ -235,8 +235,10 @@ function main() {
             window.PetalCountLogger.detail = detail;
             window.PetalCountLogger.raw = raw;
             window.PetalCountLogger.lastUpdate = Date.now();
-        }, 5000);
-        updateInterval();
+        };
+        
+        updateData();
+        setInterval(updateData, 5000);
     })();
 }
 main();

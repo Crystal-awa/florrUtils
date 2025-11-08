@@ -168,7 +168,7 @@ function main() {
             }
         };
 
-        const updateInterval = setInterval(() => {
+        const updateData = () => {
             const moduleHeap = window.Module?.HEAPU32 || (typeof Module !== 'undefined' && Module.HEAPU32);
             if (!moduleHeap) return;
 
@@ -213,8 +213,10 @@ function main() {
             window.MobCountLogger.detail = detail;
             window.MobCountLogger.raw = raw;
             window.MobCountLogger.lastUpdate = Date.now();
-        }, 5000);
-        updateInterval();
+        };
+        
+        updateData();
+        setInterval(updateData, 5000);
     })();
 }
 
