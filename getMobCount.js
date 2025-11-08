@@ -235,7 +235,7 @@ MobCountLogger.getGrandTotal()
 MobCountLogger.getLeaderboard()
 
 获取 mob 图片
-MobCountLogger.getMobImage('ladybug')
+MobCountLogger.getImageUrl("Rare","ladybug")
 
 获取原始数据(类似官方的getMobs())
 MobCountLogger.getRaw()
