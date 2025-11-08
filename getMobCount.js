@@ -80,10 +80,11 @@ function main() {
         });
         
         const maxMobId = Math.max(...mobs.map(mob => mob.id));
+        const MobIdMap = Object.fromEntries(mobs.map(p => [p.sid, p.id]));
 
         const rarityNames = ['Common', 'Unusual', 'Rare', 'Epic', 'Legendary', 'Mythic', 'Ultra', 'Super'];
         const rarityCount = rarityNames.length; // 8
-        // const rarityIndexMap = Object.fromEntries(rarityNames.map((name, index) => [name, index]));
+        const rarityIndexMap = Object.fromEntries(rarityNames.map((name, index) => [name, index]));
 
         const end = inventoryBaseAddress + petalSids.length * rarityCountAll - 1;
         const endAddress = end * 4 + 164;
@@ -125,20 +126,15 @@ function main() {
                 return this.lastUpdate; 
             },
             
-            getMobImage(sid) {
-                const mob = mobs.find(m => m.sid === sid);
-                if (!mob) return null;
-                
-                const key = `mob_${sid}`;
+            getImageUrl(rarityName, sid) {
+                const rarityIdx = rarityIndexMap[rarityName];
+                const MobId = MobIdMap[sid];
+                if (rarityIdx == null || MobId == null) return null;
+                const key = `${rarityName}_${sid}`;
                 if (imageCache[key]) return imageCache[key];
-                
-                try {
-                    const url = florrioUtils.generateMobImage?.(64, mob.id) || null;
-                    if (url) imageCache[key] = url;
-                    return url;
-                } catch (e) {
-                    return null;
-                }
+                const url = florrioUtils.generateMobImage(64, MobId, rarityIdx, 1);
+                imageCache[key] = url;
+                return url;
             },
             
             getTotalKills(sid) {
