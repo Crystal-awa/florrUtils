@@ -266,10 +266,10 @@ PetalCountLogger.getRarityPercentage()
 获取所有花瓣的总数量
 PetalCountLogger.getGrandTotal()
 
-获取原始数据
+获取原始数据(类似官方的getPetals())
 PetalCountLogger.getRaw()
 
-获取格式化的原始数据
+获取格式化的原始数据(更易读)
 PetalCountLogger.getRawFormatted()
 
 获取某个花瓣的图片

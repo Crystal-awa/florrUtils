@@ -242,7 +242,7 @@ MobCountLogger.getMobImage('ladybug')
 获取原始数据(类似官方的getMobs())
 MobCountLogger.getRaw()
 
-获取格式化的原始数据（更易读）
+获取格式化的原始数据(更易读)
 MobCountLogger.getRawFormatted()
 
 获取最后更新时间
