@@ -118,6 +118,21 @@
 
         updatePosition() {
             if (this.element) {
+                // 限制位置不超出屏幕边界
+                const rect = this.element.getBoundingClientRect();
+                const scaledWidth = rect.width;
+                const scaledHeight = rect.height;
+                
+                // 至少保留 50px 在屏幕内可见
+                const minVisible = 50;
+                const maxX = window.innerWidth - minVisible;
+                const maxY = window.innerHeight - minVisible;
+                const minX = minVisible - scaledWidth;
+                const minY = 0;
+                
+                this.currentX = Math.max(minX, Math.min(maxX, this.currentX));
+                this.currentY = Math.max(minY, Math.min(maxY, this.currentY));
+                
                 this.element.style.left = `${this.currentX}px`;
                 this.element.style.top = `${this.currentY}px`;
             }
@@ -216,6 +231,7 @@
             this.mobById = {};
             this.maxMobId = 0;
             this.mobBase = 0;
+            this.rarityCount = 0;
             this.florrioUtils = null;
             this.mobImageCache = {};
             this.updateInterval = null;
@@ -239,8 +255,8 @@
             const inventoryBaseAddress = await this.getInventoryBaseAddress();
             const petals = this.florrioUtils.getPetals();
             const petalSids = petals.map(p => p.sid);
-            const rarityCount = petals.find(p => Array.isArray(p.allowedDropRarities))?.allowedDropRarities.length || 9;
-            const end = inventoryBaseAddress + petalSids.length * rarityCount - 1;
+            this.rarityCount = petals.find(p => Array.isArray(p.allowedDropRarities))?.allowedDropRarities.length || 9;
+            const end = inventoryBaseAddress + petalSids.length * this.rarityCount - 1;
             const endAddress = end * 4 + 164;
             this.mobBase = endAddress / 4;
             
@@ -296,7 +312,7 @@
                 const mobCounts = [];
                 
                 for (let r = 0; r < this.mobRarityNames.length; r++) {
-                    const idx = this.mobBase + i * this.mobRarityNames.length * 2 + r * 2;
+                    const idx = this.mobBase + i * this.mobRarityNames.length * 2 + r * 2 + 2;
                     const count = moduleHeap[idx] || 0;
                     mobCounts.push(count);
                 }
@@ -364,7 +380,7 @@
             if (this.mobImageCache[key]) return this.mobImageCache[key];
             if (!this.florrioUtils) return null;
             
-            const url = this.florrioUtils.generateMobImage(64, mobId, (rarityIndex - 1).toString(), 1);
+            const url = this.florrioUtils.generateMobImage(64, mobId, rarityIndex.toString(), 1);
             this.mobImageCache[key] = url;
             return url;
         }
@@ -373,7 +389,7 @@
             this.updateInterval = setInterval(() => {
                 const killed = this.getKilledThisRun();
                 this.updateUI(killed);
-            }, 50);
+            }, 200);
         }
 
         updateUI(killed) {
