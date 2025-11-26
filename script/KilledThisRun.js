@@ -122,17 +122,17 @@
                 const rect = this.element.getBoundingClientRect();
                 const scaledWidth = rect.width;
                 const scaledHeight = rect.height;
-                
+
                 // 至少保留 50px 在屏幕内可见
                 const minVisible = 50;
                 const maxX = window.innerWidth - minVisible;
                 const maxY = window.innerHeight - minVisible;
                 const minX = minVisible - scaledWidth;
                 const minY = 0;
-                
+
                 this.currentX = Math.max(minX, Math.min(maxX, this.currentX));
                 this.currentY = Math.max(minY, Math.min(maxY, this.currentY));
-                
+
                 this.element.style.left = `${this.currentX}px`;
                 this.element.style.top = `${this.currentY}px`;
             }
@@ -240,29 +240,30 @@
 
         async initialize() {
             await waitForGame();
-            
+
             this.florrioUtils = window.florrio.utils;
             const mobs = this.florrioUtils.getMobs();
-            
+
             this.mobSids = mobs.map(m => m.sid);
             this.mobIdMap = Object.fromEntries(mobs.map(m => [m.sid, m.id]));
             mobs.forEach(mob => {
                 this.mobById[mob.id] = mob;
             });
             this.maxMobId = Math.max(...mobs.map(mob => mob.id));
-            
+
             // 计算mob数据在内存中的基址
             const inventoryBaseAddress = await this.getInventoryBaseAddress();
             const petals = this.florrioUtils.getPetals();
             const petalSids = petals.map(p => p.sid);
             this.rarityCount = petals.find(p => Array.isArray(p.allowedDropRarities))?.allowedDropRarities.length || 9;
             const end = inventoryBaseAddress + petalSids.length * this.rarityCount - 1;
-            const endAddress = end * 4 + 164;
+            const endAddress = end * 4 + 176;
+            console.log("endAddress", end * 4)
             this.mobBase = endAddress / 4;
-            
+
             // 初始化基准数据
             this.resetBaseline();
-            
+
             // 开始定时更新
             this.startTracking();
         }
@@ -271,14 +272,14 @@
             const response = await fetch(`https://static.florr.io/${window.versionHash}/client.wasm`);
             const buffer = await response.arrayBuffer();
             const arr = new Uint8Array(buffer);
-            
+
             const readVarUint32 = (arr) => {
                 let idx = 0, res = 0;
                 do res |= ((arr[idx] ?? 0) & 0b01111111) << idx * 7;
                 while ((arr[idx++] ?? 0) & 0b10000000);
                 return [idx, res];
             };
-            
+
             const addrs = [];
             for (let i = 0; i < arr.length; i++) {
                 let j = i;
@@ -298,7 +299,7 @@
                 if (arr[j++] !== 0) continue;
                 addrs.push(addr >> 2);
             }
-            
+
             return addrs[0];
         }
 
@@ -307,19 +308,19 @@
             if (!moduleHeap) return null;
 
             const data = [];
-            
+
             for (let i = 0; i <= this.maxMobId; i++) {
                 const mobCounts = [];
-                
+
                 for (let r = 0; r < this.mobRarityNames.length; r++) {
-                    const idx = this.mobBase + i * this.mobRarityNames.length * 2 + r * 2 + 2;
+                    const idx = this.mobBase + i * this.mobRarityNames.length * 2 + r * 2;
                     const count = moduleHeap[idx] || 0;
                     mobCounts.push(count);
                 }
-                
+
                 const actualMobId = i + 1;
                 const mob = this.mobById[actualMobId];
-                
+
                 if (mob) {
                     data.push({
                         id: mob.id,
@@ -328,7 +329,7 @@
                     });
                 }
             }
-            
+
             return data;
         }
 
@@ -341,20 +342,20 @@
             if (!this.currentData || !this.initialData) return [];
 
             const killed = [];
-            
+
             this.currentData.forEach((current, index) => {
                 const initial = this.initialData[index];
                 if (!initial) return;
-                
+
                 current.counts.forEach((count, rarityIndex) => {
                     const diff = count - (initial.counts[rarityIndex] || 0);
                     if (diff > 0) {
                         const rarity = this.mobRarityNames[rarityIndex];
                         if (!rarity) return;
-                        
+
                         const imageUrl = this.getMobImageUrl(rarity, current.sid);
                         if (!imageUrl) return;
-                        
+
                         killed.push({
                             sid: current.sid,
                             rarity: rarity,
@@ -365,7 +366,7 @@
                     }
                 });
             });
-            
+
             return killed;
         }
 
@@ -379,7 +380,7 @@
             const key = `${rarityName}_${sid}`;
             if (this.mobImageCache[key]) return this.mobImageCache[key];
             if (!this.florrioUtils) return null;
-            
+
             const url = this.florrioUtils.generateMobImage(64, mobId, rarityIndex.toString(), 1);
             this.mobImageCache[key] = url;
             return url;
@@ -420,7 +421,7 @@
 
             // 获取当前所有的 key
             const currentKeys = Array.from(mobMap.keys());
-            
+
             // 找出需要移除的元素
             const existingElements = contentBody.querySelectorAll('.killed-mob-item');
             existingElements.forEach(element => {
@@ -434,19 +435,19 @@
             mobMap.forEach(mob => {
                 const key = `${mob.rarity}_${mob.sid}`;
                 let mobDiv = contentBody.querySelector(`[data-key="${key}"]`);
-                
+
                 // 如果元素不存在，创建新元素
                 if (!mobDiv) {
                     mobDiv = document.createElement('div');
                     mobDiv.className = 'killed-mob-item is-new'; // 新元素添加动画类
                     mobDiv.setAttribute('data-key', key);
-                    
+
                     const img = document.createElement('img');
                     img.src = mob.imageUrl;
                     img.alt = mob.sid;
                     img.className = 'killed-mob-image';
                     mobDiv.appendChild(img);
-                    
+
                     // 按稀有度顺序插入
                     let inserted = false;
                     const existingItems = contentBody.querySelectorAll('.killed-mob-item');
@@ -463,13 +464,13 @@
                     if (!inserted) {
                         contentBody.appendChild(mobDiv);
                     }
-                    
+
                     // 200ms 后移除动画类，避免重复播放
                     setTimeout(() => {
                         mobDiv.classList.remove('is-new');
                     }, 200);
                 }
-                
+
                 // 更新或添加数量徽章
                 let badge = mobDiv.querySelector('.killed-count-badge');
                 if (mob.count > 1) {
@@ -505,7 +506,7 @@
                 <div class="killed-content-body"></div>
             </div>
         `;
-        
+
         // 添加样式
         const style = document.createElement('style');
         style.textContent = `
@@ -515,14 +516,14 @@
                 transform-origin: top left;
                 user-select: none;
             }
-            
+
             .killed-tracker-panel {
                 width: 200px;
                 background: rgba(0, 0, 0, 0.5);
                 border-radius: 3px;
                 padding-bottom: 10px;
             }
-            
+
             .killed-tracker-title {
                 display: block;
                 text-align: center;
@@ -539,7 +540,7 @@
                     0.5px 0 0 #000;
                 font-size: 14px;
             }
-            
+
             .killed-content-body {
                 width: 177px;
                 margin: 0 auto;
@@ -552,29 +553,29 @@
                 scrollbar-width: thin;
                 scrollbar-color: rgba(255,255,255,0.3) rgba(255,255,255,0.1);
             }
-            
+
             .killed-content-body::-webkit-scrollbar {
                 width: 6px;
             }
-            
+
             .killed-content-body::-webkit-scrollbar-track {
                 background: rgba(255,255,255,0.1);
             }
-            
+
             .killed-content-body::-webkit-scrollbar-thumb {
                 background: rgba(255,255,255,0.3);
                 border-radius: 3px;
             }
-            
+
             .killed-mob-item {
                 position: relative;
                 display: flex;
             }
-            
+
             .killed-mob-item.is-new {
                 animation: fadeIn 0.2s ease forwards;
             }
-            
+
             @keyframes fadeIn {
                 0% {
                     transform: scale(0);
@@ -585,14 +586,14 @@
                     opacity: 1;
                 }
             }
-            
+
             .killed-mob-image {
                 width: 38px;
                 height: 38px;
                 padding: 1px;
                 pointer-events: none;
             }
-            
+
             .killed-count-badge {
                 position: absolute;
                 top: 0;
@@ -617,10 +618,10 @@
                 pointer-events: none;
             }
         `;
-        
+
         document.head.appendChild(style);
         document.body.appendChild(container);
-        
+
         return container;
     }
 
@@ -637,7 +638,7 @@
 
         // 创建UI
         const container = createUI();
-        
+
         // 初始化拖拽和缩放
         const draggable = new DraggableResizable('killed-tracker', {
             enableDrag: true,
@@ -650,13 +651,13 @@
             defaultY: 0
         });
         draggable.init(container);
-        
+
         // 初始化追踪器
         const tracker = new MobTracker();
         await tracker.initialize();
 
         console.log('Florr.io Killed This Run Tracker loaded successfully!');
-        
+
         // 清理函数
         window.addEventListener('beforeunload', () => {
             draggable.destroy();
