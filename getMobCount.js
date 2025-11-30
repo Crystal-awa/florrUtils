@@ -87,7 +87,7 @@ function main() {
         const rarityIndexMap = Object.fromEntries(rarityNames.map((name, index) => [name, index]));
 
         const end = inventoryBaseAddress + petalSids.length * rarityCountAll - 1;
-        const endAddress = end * 4 + 164;
+        const endAddress = end * 4 + 176;
         const mobBase = endAddress / 4;
 
         const imageCache = {};
